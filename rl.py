@@ -21,7 +21,7 @@ colorlist =['xkcd:dark red', #1
 
 class Table(object):
     """infinite table where every rows is being RL of the previous one and   """
-    cfill = LL('/home/vlad/work/rl/fill.so').fill
+    cfill = LL('./fill.so').fill
     cfill.argtypes = [
         ctypes.c_int,
         ndpointer(ctypes.c_int,ndim=1),
@@ -39,13 +39,9 @@ class Table(object):
         self.code = code
         self.stype = stype
         self.field = np.zeros((self.VD,self.HD,),dtype ='int32')
-        # self.prev = -np.ones((self.VD,),dtype=int)
         self.generate()
         self.cfill(self.genome.size,self.genome,self.VD,self.HD,self.field)
-        # for i in range(self.VD):
-        #     self.up(i,i)
-        # return
-
+        self.field = self.genome[self.field]        
 
     def generate(self):
         self.genome = [-1] 
@@ -80,33 +76,11 @@ class Table(object):
 
 
 
-
-    # def up(self,ver,val):
-    #     if (self.prev[ver]<self.HD-1): 
-    #         self.prev[ver]+=1
-    #     else:
-    #         return    
-            
-    #     self.field[ver,self.prev[ver]]=val
-    #     if (ver>0):
-    #         nval = self.field[ver-1,self.prev[ver-1]]
-    #         for dum in range(self.genome[val]-1):  
-    #             self.up(ver-1,nval) 
-    #         oval = nval   
-    #         while (self.genome[nval]==self.genome[oval]):
-    #             if nval+1 == self.GD :
-    #                 self.GD=self.GD*2
-    #                 self.generate() 
-    #             nval+=1
-    #         self.up(ver-1,nval)
-        
-    #     return;
-
     def __str__(self):
         s=""
         for i in range(10):
             for j in range(50):
-                s=s+str(self.genome[self.field[i,j]])+' '
+                s=s+str(self.field[i,j])+' '
             s=s+'\n'
         return s
 
@@ -115,23 +89,19 @@ class Table(object):
         self.hoffset=x
         self.voffset=y
         self.step=1
-        self.ax = plt.axes([0.25, 0.2, .65, 0.7])
-        # fig, self.ax = plt.subplots()
 
         axscale = plt.axes([0.25, 0.1, .55, 0.03], facecolor="green")
         self.slscale = Slider(axscale, 'Scale', 1, 2, valinit=1.2, valstep=0.01)
         self.slscale.on_changed(self.update)
-        self.imsize=int(10**self.slscale.val)
-        d=self.imsize
-        # self.ax.
-        # self.ax.set_xlim(0,1)
-        # self.ax.set_ylim(0,1)
-
+        d=int(10**self.slscale.val)
+        self.imsize=d
+        
+        self.ax = plt.axes([0.25, 0.2, .65, 0.7])
         self.im = self.ax.imshow([[.0]], cmap= LinearSegmentedColormap.from_list(
-        "thiscmap", colorlist[:max(self.code)], N=100))
+            "thiscmap", colorlist[:max(self.code)], N=25))
         self.cbar = self.ax.figure.colorbar(self.im, ax=self.ax)
         self.cbar.set_ticks(self.code)
-        # self.cbar.ax.set_ticklabels(range(10))
+        
         axright = plt.axes([0.14, 0.35, 0.04, 0.04])
         axleft = plt.axes([0.06, 0.35, 0.04, 0.04])
         axup = plt.axes([0.1, 0.39, 0.04, 0.04])
@@ -147,7 +117,7 @@ class Table(object):
         self.bleft.on_clicked(self.fleft)
         self.bup.on_clicked(self.fup)
         self.bdown.on_clicked(self.fdown)
-        # self.numbers = []
+        
         self.update(0)
 
 
@@ -178,21 +148,13 @@ class Table(object):
         y=self.voffset
         sideticks=[.5/d-.5+i/d for i in range(d)]
         
-        # for number in self.numbers:
-        #     number.remove()
-        # self.numbers = []
-        # for i in range(d):
-        #     for j in range(d):
-        #         self.numbers.append(self.ax.text(sideticks[j], sideticks[i], self.genome[self.field[y+j,x+i]],
-        #                ha="center", va="center", color="k"))
-        
         self.ax.set_xticks(sideticks)
         self.ax.set_yticks(sideticks)
         self.ax.set_xticklabels([str(x)]+[' ']*(d-2)+[str(x+d)])
         self.ax.set_yticklabels([str(y)]+[' ']*(d-2)+[str(y+d)])
-        self.im.set_data(self.genome[self.field[y:y+d:1,x:x+d]])
+        self.im.set_data(self.field[y:y+d:1,x:x+d])
         self.im.autoscale()
-        # self.ax.axis('scaled')
+        
         plt.draw()
 
 
